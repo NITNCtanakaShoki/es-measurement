@@ -54,7 +54,7 @@ func main() {
 func reset(client *http.Client, logger *log.Logger) {
 	url := fmt.Sprintf("%s/reset", BaseURL)
 	req, err := http.NewRequest("DELETE", url, nil)
-	req.Header.Set("Authorization", "Reset-Force")
+	req.Header.Set("Authentication", "Reset-Force")
 	if err != nil {
 		logger.Fatalf("failed to reset: %s", err.Error())
 		return
