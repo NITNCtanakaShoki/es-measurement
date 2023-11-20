@@ -79,7 +79,7 @@ func prepareUser(client *http.Client, username string, logger *log.Logger) {
 		logger.Fatalf("failed to prepare user: %s", err.Error())
 		return
 	}
-	if res.StatusCode != 200 {
+	if res.StatusCode != 201 {
 		bodyBytes, err := io.ReadAll(res.Body)
 		if err != nil {
 			logger.Fatalf("failed to prepare user: %s", err.Error())
