@@ -25,7 +25,7 @@ func main() {
 	prepareUser(client, User1, logger)
 	prepareUser(client, User2, logger)
 
-	unit := 10_000
+	unit := 10
 	count := 0
 	c := make(chan uint8, unit)
 
