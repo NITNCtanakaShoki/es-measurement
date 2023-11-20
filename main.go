@@ -63,6 +63,10 @@ func reset(client *http.Client, logger *log.Logger) {
 		return
 	}
 	res, err := client.Do(req)
+	if err != nil {
+		logger.Fatalf("failed to reset: %s", err.Error())
+		return
+	}
 	if res.StatusCode != 200 {
 		// print res.body
 		bodyBytes, err := io.ReadAll(res.Body)
