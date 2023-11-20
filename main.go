@@ -20,6 +20,8 @@ func main() {
 	client := &http.Client{}
 	logger := log.New(os.Stdout, "LOG: ", log.LstdFlags|log.Lshortfile)
 
+	reset(client, logger)
+
 	prepareUser(client, User1, logger)
 	prepareUser(client, User2, logger)
 
@@ -49,6 +51,27 @@ func main() {
 	}
 }
 
+func reset(client *http.Client, logger *log.Logger) {
+	url := fmt.Sprintf("%s/reset", BaseURL)
+	req, err := http.NewRequest("DELETE", url, nil)
+	req.Header.Set("Authorization", "Reset-Force")
+	if err != nil {
+		logger.Fatalf("failed to reset: %s", err.Error())
+		return
+	}
+	res, err := client.Do(req)
+	if res.StatusCode != 200 {
+		// print res.body
+		bodyBytes, err := io.ReadAll(res.Body)
+		if err != nil {
+			logger.Fatalf("failed to reset: %s", err.Error())
+			return
+		}
+		logger.Fatalf("failed to reset: %d, %s", res.StatusCode, string(bodyBytes))
+		return
+	}
+}
+
 func prepareUser(client *http.Client, username string, logger *log.Logger) {
 	url := fmt.Sprintf("%s/user/%s", BaseURL, username)
 	res, err := client.Post(url, "application/json", nil)
@@ -57,7 +80,6 @@ func prepareUser(client *http.Client, username string, logger *log.Logger) {
 		return
 	}
 	if res.StatusCode != 200 {
-		// print res.body
 		bodyBytes, err := io.ReadAll(res.Body)
 		if err != nil {
 			logger.Fatalf("failed to prepare user: %s", err.Error())
