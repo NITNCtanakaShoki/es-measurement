@@ -25,26 +25,28 @@ func main() {
 	prepareUser(client, User1, logger)
 	prepareUser(client, User2, logger)
 
-	unit := 10
+	unit := 100
+	measureFrequency := 100
 	count := 0
 	c := make(chan uint8, unit)
 
 	for i := 0; i < 100_000_000; i++ {
-		for j := 0; j < unit; j++ {
-			go func() {
-				for k := 0; k < 10; k++ {
-					if err := sendRandom(client, logger); err == nil {
-						c <- 1
-						return
+		for j := 0; j < measureFrequency; j++ {
+			for k := 0; k < unit; k++ {
+				go func() {
+					for l := 0; l < 10; l++ {
+						if err := sendRandom(client, logger); err == nil {
+							c <- 1
+							return
+						}
 					}
-				}
-				panic("failed to send")
-			}()
-		}
-
-		for k := 0; k < unit; k++ {
-			<-c
-			count++
+					panic("failed to send")
+				}()
+			}
+			for k := 0; k < unit; k++ {
+				<-c
+				count++
+			}
 		}
 		if err := measure(client, logger, count); err != nil {
 			logger.Printf("failed to measure")
