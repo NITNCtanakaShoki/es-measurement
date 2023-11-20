@@ -40,13 +40,14 @@ func main() {
 				}
 				panic("failed to send")
 			}()
-			for k := 0; k < unit; k++ {
-				<-c
-				count++
-			}
-			if err := measure(client, logger, count); err != nil {
-				logger.Printf("failed to measure")
-			}
+		}
+
+		for k := 0; k < unit; k++ {
+			<-c
+			count++
+		}
+		if err := measure(client, logger, count); err != nil {
+			logger.Printf("failed to measure")
 		}
 	}
 }
