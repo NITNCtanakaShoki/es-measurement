@@ -30,7 +30,7 @@ func main() {
 	count := 0
 	c := make(chan uint8, unit)
 
-	for i := 0; i < 100_000_000; i++ {
+	for i := 0; i < 100_000; i++ {
 		for j := 0; j < measureFrequency; j++ {
 			for k := 0; k < unit; k++ {
 				go func() {
