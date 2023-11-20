@@ -17,8 +17,15 @@ const User1 = "user1"
 const User2 = "user2"
 
 func main() {
+	title := "CHUNK_1024_APP_M100_C10_DB_M100_C50"
+	logFile, err := os.OpenFile(fmt.Sprintf("%s.log", title), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer logFile.Close()
+
 	client := &http.Client{}
-	logger := log.New(os.Stdout, "LOG: ", log.LstdFlags|log.Lshortfile)
+	logger := log.New(logFile, "LOG: ", log.LstdFlags|log.Lshortfile)
 
 	reset(client, logger)
 
