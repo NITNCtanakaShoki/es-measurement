@@ -8,6 +8,7 @@ import (
 	"log"
 	"math/rand"
 	"net/http"
+	"os"
 	"time"
 )
 
@@ -17,7 +18,7 @@ const User2 = "user2"
 
 func main() {
 	client := &http.Client{}
-	logger := &log.Logger{}
+	logger := log.New(os.Stdout, "LOG: ", log.LstdFlags|log.Lshortfile)
 
 	prepareUser(client, User1, logger)
 	prepareUser(client, User2, logger)
