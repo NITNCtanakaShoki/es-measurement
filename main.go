@@ -109,8 +109,11 @@ type SendJSON struct {
 }
 
 func measure(client *http.Client, logger *log.Logger, count int) error {
+	if err := requestLog(client, logger); err != nil {
+		return err
+	}
+	url := fmt.Sprintf("%s/user/%s", BaseURL, User1)
 	start := time.Now()
-	url := fmt.Sprintf("%s/user/%s/log", BaseURL, User1)
 	res, err := client.Get(url)
 	if err != nil {
 		logger.Println(err.Error())
@@ -120,6 +123,17 @@ func measure(client *http.Client, logger *log.Logger, count int) error {
 	b, err := io.ReadAll(res.Body)
 	costDuration := time.Since(start)
 	logger.Println(fmt.Sprintf("measure: count: %d, status: %d, point: %s, time: %dms, %s", count, res.StatusCode, string(b), costDuration.Milliseconds(), time.Now().Format("2006-01-02T15:04:05+09:00")))
+	return nil
+}
+
+func requestLog(client *http.Client, logger *log.Logger) error {
+	url := fmt.Sprintf("%s/user/%s/log", BaseURL, User1)
+	res, err := client.Get(url)
+	if err != nil {
+		logger.Println(err.Error())
+		return err
+	}
+	defer res.Body.Close()
 	return nil
 }
 
