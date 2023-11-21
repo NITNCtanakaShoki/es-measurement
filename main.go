@@ -32,12 +32,12 @@ func main() {
 	prepareUser(client, User1, logger)
 	prepareUser(client, User2, logger)
 
-	unit := 500
-	measureFrequency := 10
+	unit := 100
+	measureFrequency := 100
 	count := 0
 	c := make(chan uint8, unit)
 
-	for i := 0; i < 200; i++ {
+	for i := 0; i < 100; i++ {
 		for j := 0; j < measureFrequency; j++ {
 			for k := 0; k < unit; k++ {
 				go func() {
