@@ -9,6 +9,7 @@ import (
 	"math/rand"
 	"net/http"
 	"os"
+	"os/exec"
 	"time"
 )
 
@@ -109,9 +110,14 @@ type SendJSON struct {
 }
 
 func measure(client *http.Client, logger *log.Logger, count int) error {
-	if err := requestLog(client, logger); err != nil {
+	c := make(chan error, 1)
+	go requestLog(client, logger, c)
+	logDockerStats(logger, count)
+	if err := <-c; err != nil {
+		logger.Println(err.Error())
 		return err
 	}
+
 	url := fmt.Sprintf("%s/user/%s", BaseURL, User1)
 	start := time.Now()
 	res, err := client.Get(url)
@@ -126,15 +132,32 @@ func measure(client *http.Client, logger *log.Logger, count int) error {
 	return nil
 }
 
-func requestLog(client *http.Client, logger *log.Logger) error {
+func logDockerStats(logger *log.Logger, count int) {
+	cmd := exec.Command("docker", "container", "stats", "--no-stream", "--format", "{{.Name}},{{.CPUPerc}},{{.MemUsage}},{{.MemPerc}},{{.NetIO}},{{.PIDs}}")
+
+	// コマンドを一つ上の階層のディレクトリで実行するためにディレクトリを変更
+	cmd.Dir = ".."
+
+	// コマンドの標準出力を取得
+	output, err := cmd.Output()
+	if err != nil {
+		log.Fatalf("Failed to execute command: %s", err)
+	}
+
+	logger.Println("log-docker-start: %d", count)
+	logger.Println("%s", output)
+	logger.Println("log-docker-end: %d", count)
+}
+
+func requestLog(client *http.Client, logger *log.Logger, c chan error) {
 	url := fmt.Sprintf("%s/user/%s/log", BaseURL, User1)
 	res, err := client.Get(url)
 	if err != nil {
 		logger.Println(err.Error())
-		return err
+		c <- err
 	}
 	defer res.Body.Close()
-	return nil
+	c <- nil
 }
 
 func sendRandom(client *http.Client, logger *log.Logger) error {
