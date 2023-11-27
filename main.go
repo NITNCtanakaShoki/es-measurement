@@ -111,6 +111,21 @@ type SendJSON struct {
 
 func measure(client *http.Client, logger *log.Logger, count int) error {
 	c := make(chan error, 1)
+
+	cmd := exec.Command("docker", "container", "stats", "--format", "{{.Name}},{{.CPUPerc}},{{.MemUsage}},{{.MemPerc}},{{.NetIO}},{{.PIDs}}")
+	cmd.Dir = ".."
+	defer func(cmd *exec.Cmd) {
+		err := cmd.Process.Kill()
+		if err != nil {
+			logger.Printf("[ERROR] DOCKER-LOG-ERROR: %s\n", err.Error())
+		}
+		output, err := cmd.Output()
+		if err != nil {
+			log.Fatalf("Failed to execute command: %s", err)
+		}
+		logger.Printf("DOCKER-START%d\n%sDOCKER-END\n", count, output)
+	}(cmd)
+
 	go requestLog(client, logger, c)
 	logDockerStats(logger, count)
 	if err := <-c; err != nil {
@@ -137,6 +152,11 @@ func logDockerStats(logger *log.Logger, count int) {
 
 	// コマンドを一つ上の階層のディレクトリで実行するためにディレクトリを変更
 	cmd.Dir = ".."
+
+	err := cmd.Process.Kill()
+	if err != nil {
+		return
+	}
 
 	// コマンドの標準出力を取得
 	output, err := cmd.Output()
