@@ -158,12 +158,6 @@ func measure(client *http.Client, logger *log.Logger, count int) error {
 		return err
 	}
 
-	// コマンドの完了を待つ
-	if err := cmd.Wait(); err != nil {
-		logger.Printf("[ERROR] Failed to wait for command completion: %s\n", err)
-		return err
-	}
-
 	return nil
 }
 
