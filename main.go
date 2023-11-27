@@ -114,7 +114,7 @@ func measure(client *http.Client, logger *log.Logger, count int) error {
 
 	cmd := exec.Command("docker", "container", "stats", "--format", "{{.Name}},{{.CPUPerc}},{{.MemUsage}},{{.MemPerc}},{{.NetIO}},{{.PIDs}}")
 	cmd.Dir = ".."
-	defer func(cmd *exec.Cmd) {
+	defer func(cmd *exec.Cmd, logger *log.Logger, count int) {
 		err := cmd.Process.Kill()
 		if err != nil {
 			logger.Printf("[ERROR] DOCKER-LOG-ERROR: %s\n", err.Error())
@@ -124,7 +124,7 @@ func measure(client *http.Client, logger *log.Logger, count int) error {
 			log.Fatalf("Failed to execute command: %s", err)
 		}
 		logger.Printf("DOCKER-START%d\n%sDOCKER-END\n", count, output)
-	}(cmd)
+	}(cmd, logger, count)
 
 	go requestLog(client, logger, c)
 	logDockerStats(logger, count)
