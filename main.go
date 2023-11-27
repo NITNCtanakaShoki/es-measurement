@@ -144,9 +144,7 @@ func logDockerStats(logger *log.Logger, count int) {
 		log.Fatalf("Failed to execute command: %s", err)
 	}
 
-	logger.Printf("log-docker-start: %d\n", count)
-	logger.Printf("%s\n", output)
-	logger.Printf("log-docker-end: %d\n", count)
+	logger.Printf("DOCKER-START%d\n%sDOCKER-END\n", count, output)
 }
 
 func requestLog(client *http.Client, logger *log.Logger, c chan error) {
