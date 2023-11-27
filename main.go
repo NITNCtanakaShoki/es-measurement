@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"bytes"
 	json2 "encoding/json"
 	"fmt"
@@ -110,13 +111,31 @@ type SendJSON struct {
 }
 
 func measure(client *http.Client, logger *log.Logger, count int) error {
-	c := make(chan error, 1)
-
 	cmd := exec.Command("docker", "container", "stats", "--format", "{{.Name}},{{.CPUPerc}},{{.MemUsage}},{{.MemPerc}},{{.NetIO}},{{.PIDs}}")
 	cmd.Dir = ".."
 
-	go requestLog(client, logger, c)
-	if err := <-c; err != nil {
+	// 標準出力をパイプで取得
+	stdout, err := cmd.StdoutPipe()
+	if err != nil {
+		logger.Printf("[ERROR] Failed to create stdout pipe: %s\n", err)
+		return err
+	}
+
+	// コマンドを非同期で開始
+	if err := cmd.Start(); err != nil {
+		logger.Printf("[ERROR] Failed to start command: %s\n", err)
+		return err
+	}
+
+	// 標準出力をリアルタイムで読み取る
+	go func() {
+		scanner := bufio.NewScanner(stdout)
+		for scanner.Scan() {
+			logger.Printf("DOCKER-OUTPUT: %d\n%s", count, scanner.Text())
+		}
+	}()
+
+	if err := requestLog(client, logger); err != nil {
 		logger.Println(err.Error())
 		return err
 	}
@@ -133,27 +152,30 @@ func measure(client *http.Client, logger *log.Logger, count int) error {
 	costDuration := time.Since(start)
 	logger.Println(fmt.Sprintf("measure: count: %d, status: %d, point: %s, time: %dms, %s", count, res.StatusCode, string(b), costDuration.Milliseconds(), time.Now().Format("2006-01-02T15:04:05+09:00")))
 
+	// コマンドのプロセスを終了
 	if err := cmd.Process.Kill(); err != nil {
-		logger.Printf("[ERROR] DOCKER-LOG-ERROR: %s\n", err.Error())
+		logger.Printf("[ERROR] Failed to kill process: %s\n", err)
+		return err
 	}
-	output, err := cmd.Output()
-	if err != nil {
-		log.Fatalf("Failed to execute command: %s", err)
+
+	// コマンドの完了を待つ
+	if err := cmd.Wait(); err != nil {
+		logger.Printf("[ERROR] Failed to wait for command completion: %s\n", err)
+		return err
 	}
-	logger.Printf("DOCKER-START%d\n%sDOCKER-END\n", count, output)
 
 	return nil
 }
 
-func requestLog(client *http.Client, logger *log.Logger, c chan error) {
+func requestLog(client *http.Client, logger *log.Logger) error {
 	url := fmt.Sprintf("%s/user/%s/log", BaseURL, User1)
 	res, err := client.Get(url)
 	if err != nil {
 		logger.Println(err.Error())
-		c <- err
+		return err
 	}
 	defer res.Body.Close()
-	c <- nil
+	return nil
 }
 
 func sendRandom(client *http.Client, logger *log.Logger) error {
