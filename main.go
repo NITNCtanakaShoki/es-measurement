@@ -127,7 +127,6 @@ func measure(client *http.Client, logger *log.Logger, count int) error {
 	}(cmd, logger, count)
 
 	go requestLog(client, logger, c)
-	logDockerStats(logger, count)
 	if err := <-c; err != nil {
 		logger.Println(err.Error())
 		return err
@@ -145,26 +144,6 @@ func measure(client *http.Client, logger *log.Logger, count int) error {
 	costDuration := time.Since(start)
 	logger.Println(fmt.Sprintf("measure: count: %d, status: %d, point: %s, time: %dms, %s", count, res.StatusCode, string(b), costDuration.Milliseconds(), time.Now().Format("2006-01-02T15:04:05+09:00")))
 	return nil
-}
-
-func logDockerStats(logger *log.Logger, count int) {
-	cmd := exec.Command("docker", "container", "stats", "--no-stream", "--format", "{{.Name}},{{.CPUPerc}},{{.MemUsage}},{{.MemPerc}},{{.NetIO}},{{.PIDs}}")
-
-	// コマンドを一つ上の階層のディレクトリで実行するためにディレクトリを変更
-	cmd.Dir = ".."
-
-	err := cmd.Process.Kill()
-	if err != nil {
-		return
-	}
-
-	// コマンドの標準出力を取得
-	output, err := cmd.Output()
-	if err != nil {
-		log.Fatalf("Failed to execute command: %s", err)
-	}
-
-	logger.Printf("DOCKER-START%d\n%sDOCKER-END\n", count, output)
 }
 
 func requestLog(client *http.Client, logger *log.Logger, c chan error) {
