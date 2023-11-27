@@ -158,6 +158,9 @@ func measure(client *http.Client, logger *log.Logger, count int) error {
 		return err
 	}
 
+	// コマンドの完了を待つ
+	_ = cmd.Wait()
+
 	return nil
 }
 
